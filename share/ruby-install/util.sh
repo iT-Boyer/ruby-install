@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 
 #
-# Searches a file for a key and echos the value.
-# Nothing is returned if the key cannot be found.
+# Convert a path to an absolute path.
 #
-function fetch()
+function absolute_path()
 {
-	local file="$ruby_install_dir/$1.txt"
-	local key="$2"
-	local line
+	local path="$1"
 
-	while IFS="" read -r line; do
-		if [[ "$line" == "$key:"* ]]; then
-			echo "${line##$key:*([[:space:]])}"
+	if [[ "$path" == "/"* ]]; then
+		echo -n "$path"
+	else
+		echo -n "${PWD}/${path}"
+	fi
+}
+
+#
+# Checks if a path is "writable".
+#
+function check_write_permissions()
+{
+	local path="$1"
+
+	while [[ -n "$path" ]]; do
+		if [[ -e "$path" ]] && [[ -w "$path" ]]; then
+			return
 		fi
-	done < "$file"
+
+		path="${path%/*}"
+	done
+
+	return 1
 }
 
 #
@@ -25,17 +40,28 @@ function download()
 	local url="$1"
 	local dest="$2"
 
+	if [[ -z "$downloader" ]]; then
+		error "Could not find wget or curl"
+		return 1
+	fi
+
+	local quiet
+
+	if [[ ! -t 1 ]]; then
+		quiet=1
+	fi
+
 	[[ -d "$dest" ]] && dest="$dest/${url##*/}"
 	[[ -f "$dest" ]] && return
 
 	mkdir -p "${dest%/*}" || return $?
 
 	case "$downloader" in
-		wget) run wget -c -O "$dest.part" "$url" || return $?         ;;
-		curl) run curl -f -L -C - -o "$dest.part" "$url" || return $? ;;
-		"")
-			error "Could not find wget or curl"
-			return 1
+		wget)
+			run wget ${quiet:+-q} -c -O "$dest.part" "$url" || return $?
+			;;
+		curl)
+			run curl ${quiet:+-s -S} -f -L -C - -o "$dest.part" "$url" || return $?
 			;;
 	esac
 

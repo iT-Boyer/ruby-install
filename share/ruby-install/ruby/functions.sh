@@ -13,27 +13,6 @@ ruby_dir_name="ruby-$ruby_version"
 ruby_mirror="${ruby_mirror:-https://cache.ruby-lang.org/pub/ruby}"
 ruby_url="${ruby_url:-$ruby_mirror/$ruby_version_family/$ruby_archive}"
 
-case "$package_manager" in
-	brew|port)
-		case "$ruby_version_family" in
-			2.*|3.0)	openssl_version="1.1" ;;
-			*)		openssl_version="3" ;;
-		esac
-		;;
-esac
-
-#
-# Install openssl@1.1 or openssl@3.0 depending on the Ruby version,
-# only for homebrew.
-#
-function install_optional_deps()
-{
-	case "$package_manager" in
-		brew)	install_packages "openssl@${openssl_version}" ;;
-		port)	install_packages "openssl${openssl_version/./}" ;;
-	esac
-}
-
 #
 # Configures Ruby.
 #
@@ -50,8 +29,16 @@ function configure_ruby()
 	log "Configuring ruby $ruby_version ..."
 	case "$package_manager" in
 		brew)
-			opt_dir="$(brew --prefix readline):$(brew --prefix libyaml):$(brew --prefix gdbm)"
+			opt_dir="$(brew --prefix readline):$(brew --prefix libyaml):$(brew --prefix libffi)"
 			openssl_dir="$(brew --prefix "openssl@${openssl_version}")"
+
+			if [[ "${ruby_dependencies[*]}" == *"gdbm"* ]]; then
+				opt_dir="${opt_dir}:$(brew --prefix gdbm)"
+			fi
+
+			if [[ "${ruby_dependencies[*]}" == *"jemalloc"* ]]; then
+				opt_dir="${opt_dir}:$(brew --prefix jemalloc)"
+			fi
 			;;
 		port)
 			opt_dir="/opt/local"
@@ -80,7 +67,7 @@ function clean_ruby()
 function compile_ruby()
 {
 	log "Compiling ruby $ruby_version ..."
-	run make "${make_opts[@]}" || return $?
+	run make -j "${make_jobs:-$(cpu_count)}" || return $?
 }
 
 #

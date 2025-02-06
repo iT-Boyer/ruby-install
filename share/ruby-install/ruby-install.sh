@@ -2,14 +2,13 @@
 
 shopt -s extglob
 
-ruby_install_version="0.9.4"
+ruby_install_version="0.10.1"
 ruby_install_dir="${BASH_SOURCE[0]%/*}"
 ruby_install_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/ruby-install"
 
 rubies=(ruby jruby truffleruby truffleruby-graalvm mruby)
 patches=()
 configure_opts=()
-make_opts=()
 
 system_dir="/usr/local"
 
@@ -45,7 +44,7 @@ Options:
 	-c, --cleanup		Remove archive and unpacked source-code after installation
 	-j, --jobs NUM, -jNUM, --jobs=NUM
 				Number of jobs to run in parallel when compiling
-	-p, --patch FILE	Patch to apply to the Ruby source-code
+	-p, --patch {FILE|URL}	Patch to apply to the Ruby source-code
 	-M, --mirror URL	Alternate mirror to download the Ruby archive from
 	-u, --url URL		Alternate URL to download the Ruby archive from
 	-m, --md5 MD5		MD5 checksum of the Ruby archive
@@ -115,11 +114,11 @@ function parse_options()
 	while [[ $# -gt 0 ]]; do
 		case "$1" in
 			-r|--rubies-dir)
-				rubies_dir="$2"
+				rubies_dir="$(absolute_path "$2")"
 				shift 2
 				;;
 			-i|--install-dir|--prefix)
-				install_dir="$2"
+				install_dir="$(absolute_path "$2")"
 				shift 2
 				;;
 			--system)
@@ -127,7 +126,7 @@ function parse_options()
 				shift 1
 				;;
 			-s|--src-dir)
-				src_dir="$2"
+				src_dir="$(absolute_path "$2")"
 				shift 2
 				;;
 			-c|--cleanup)
@@ -135,15 +134,23 @@ function parse_options()
 				shift
 				;;
 			-j|--jobs)
-				make_opts+=("$1" "$2")
+				make_jobs="$2"
 				shift 2
 				;;
-			-j+([0-9])|--jobs=+([0-9]))
-				make_opts+=("$1")
+			-j+([0-9]))
+				make_jobs="${1#-j}"
+				shift
+				;;
+			--jobs=+([0-9]))
+				make_jobs="${1#--jobs=}"
 				shift
 				;;
 			-p|--patch)
-				patches+=("$2")
+				if [[ "$2" == "http://"* || "$2" == "https://"* ]]; then
+					patches+=("$2")
+				else
+					patches+=("$(absolute_path "$2")")
+				fi
 				shift 2
 				;;
 			-M|--mirror)

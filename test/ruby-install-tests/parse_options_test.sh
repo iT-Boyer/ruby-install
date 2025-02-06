@@ -6,12 +6,12 @@ function setUp()
 {
 	patches=()
 	configure_opts=()
-	make_opts=()
 
 	unset ruby
 	unset ruby_version
 	unset src_dir
 	unset install_dir
+	unset make_jobs
 }
 
 function test_parse_options_with_no_arguments()
@@ -88,7 +88,7 @@ function test_parse_options_with_system()
 
 function test_parse_options_with_src_dir()
 {
-	local expected="~/src/"
+	local expected="/tmp"
 
 	parse_options "--src-dir" "$expected" "ruby"
 
@@ -97,39 +97,41 @@ function test_parse_options_with_src_dir()
 
 function test_parse_options_with_jobs_with_an_argument()
 {
-	local expected=(--jobs 1)
+	local expected=4
 
-	parse_options "${expected[@]}" "ruby"
+	parse_options -j "$expected" "ruby"
 
-	assertEquals "did not set \$make_opts" "${expected[*]}" "${make_opts[*]}"
+	assertEquals "did not set \$make_jobs" "$expected" "$make_jobs"
 }
 
 function test_parse_options_with_jobs_as_single_option()
 {
-	local expected="-j4"
+	local expected=4
 
-	parse_options "$expected" "ruby"
+	parse_options "-j${expected}" "ruby"
 
-	assertEquals "did not set \$make_opts" "$expected" "${make_opts[0]}"
+	assertEquals "did not set \$make_jobs" "$expected" "$make_jobs"
 }
 
 function test_parse_options_with_jobs_with_equals()
 {
-	local expected="--jobs=4"
+	local expected=4
 
-	parse_options "$expected" "ruby"
+	parse_options "--jobs=${expected}" "ruby"
 
-	assertEquals "did not set \$make_opts" "$expected" "${make_opts[0]}"
+	assertEquals "did not set \$make_jobs" "$expected" "$make_jobs"
 }
 
 function test_parse_options_with_patches()
 {
-	local expected=(patch1.diff patch2.diff)
+	local patch1=patch1.diff
+	local patch2=patch2.diff
+	local expected=("$PWD/$patch1" "$PWD/$patch2")
 
-	parse_options "--patch" "${expected[0]}" \
-		      "--patch" "${expected[1]}" "ruby"
+	parse_options "--patch" "$patch1" \
+		      "--patch" "$patch2" "ruby"
 
-	assertEquals "did not set \$patches" $expected $patches
+	assertEquals "did not set \$patches" "${expected[*]}" "${patches[*]}"
 }
 
 function test_parse_options_with_mirror()

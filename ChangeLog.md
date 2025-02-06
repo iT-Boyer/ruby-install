@@ -1,3 +1,54 @@
+### 0.10.1 / 2025-02-06
+
+#### ruby
+
+* Pass in the path of [homebrew]'s `jemalloc` to `./configure` via
+  `--with-opt-dir`.
+
+### 0.10.0 / 2025-02-05
+
+* If the installation directory or one of it's parent directories cannot
+  be written to then `ruby-install` will exit with an error before
+  attempting to build the Ruby.
+* When running under a non-TTY, disable the more verbose output of `wget`
+  and `curl`.
+* Expand relative paths given to the `--src-dir`, `--install-dir`, and
+  `--rubies-dir` options.
+
+#### ruby
+
+* Run `make` with `-j` option with the number of CPU cores by default.
+* Omit the `gdbm` dependency for ruby versions >= 3.1.0.
+* Add `libjemalloc` as a dependency if the `--with-jemalloc` configuration
+  option is given:
+
+      $ ruby-install ruby -- --with-jemalloc
+
+* Add `rust`/`rustc` as a dependency if the `--enable-yjit` configuration
+  option is given *and* the `rustc` command is not already installed.
+  This will *fully* build and enable YJIT support:
+
+      $ ruby-install ruby -- --enable-yjit
+
+#### jruby
+
+* Updated the dependencies for supported package managers:
+  * `apt` - `default-jre`
+  * `dnf` - `java-latest-openjdk`
+  * `yum` - `java-latest-openjdk`
+  * `pacman` - `jre21-openjdk`
+  * `zypper` - `java-21-openjdk`
+  * `xbps` - `openjdk-jre`
+  * `brew` - `openjdk`
+  * `port` - `openjdk21`
+  * `pkg` - `openjdk21-jre`
+* Only install the OpenJDK JRE package if the `java` command is not already
+  installed.
+
+#### mruby
+
+* Run `make` with `-j` option with the number of CPU cores by default.
+
 ### 0.9.4 / 2024-12-13
 
 #### ruby
@@ -529,16 +580,15 @@
     * [pacman]
     * [brew][homebrew]
 
-[apt]: http://wiki.debian.org/Apt
+[apt]: https://wiki.debian.org/Apt
 [dnf]: https://fedoraproject.org/wiki/Features/DNF
 [yum]: http://yum.baseurl.org/
 [pacman]: https://wiki.archlinux.org/index.php/Pacman
-[homebrew]: http://mxcl.github.com/homebrew/
+[homebrew]: https://brew.sh/
 
-[Ruby]: http://www.ruby-lang.org/
-[JRuby]: http://jruby.org/
-[Rubinius]: http://rubini.us/
-[MagLev]: http://maglev.github.io/
+[Ruby]: https://www.ruby-lang.org/
+[JRuby]: https://jruby.org/
+[MagLev]: https://maglev.github.io/
 [MRuby]: https://github.com/mruby/mruby#readme
 [truffleruby]: https://github.com/oracle/truffleruby#readme
 

@@ -8,20 +8,12 @@ source "$ruby_install_dir/checksums.sh"
 function pre_install() { return; }
 
 #
-# Loads the packages from the file within the ruby's directory for the current
-# package manager and sets $ruby_dependencies.
+# Loads the dependencies.sh file for the ruby and sets $ruby_dependencies.
 #
-function load_dependencies_from()
+function load_dependencies()
 {
-	local file="$1"
-
-	ruby_dependencies=($(fetch "$ruby/$file" "$package_manager" || return $?))
+	source "$ruby_install_dir/$ruby/dependencies.sh"
 }
-
-#
-# Loads the dependencies from dependencies.txt and sets $ruby_dependencies.
-#
-function load_dependencies() { load_dependencies_from "dependencies"; }
 
 #
 # Install the ruby's dependencies.
@@ -34,14 +26,7 @@ function install_deps()
 		log "Installing dependencies for $ruby $ruby_version ..."
 		install_packages "${ruby_dependencies[@]}" || return $?
 	fi
-
-	install_optional_deps || return $?
 }
-
-#
-# Install any optional dependencies.
-#
-function install_optional_deps() { return; }
 
 #
 # Download the Ruby archive

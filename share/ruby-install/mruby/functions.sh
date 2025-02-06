@@ -20,7 +20,7 @@ function clean_ruby()
 function compile_ruby()
 {
 	log "Compiling mruby $ruby_version ..."
-	run make "${make_opts[@]}" || return $?
+	run make -j "${make_jobs:-$(cpu_count)}" || return $?
 }
 
 #
